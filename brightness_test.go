@@ -230,6 +230,22 @@ func TestCanWriteBrightness(t *testing.T) {
 				}
 			})
 		})
+
+		t.Run("when the brightness file is group-writable", func(t *testing.T) {
+			t.Run("is true", func(t *testing.T) {
+				filePermissionCheck = func(_ string) (int, int, fs.FileMode) {
+					return rootUserId, testGroupId, fs.FileMode(uint32(0660))
+				}
+
+				actual := canWriteBrightness()
+				expected := true
+
+				if expected != actual {
+					t.Fatalf("expected %v; got: %v", expected, actual)
+				}
+			})
+		})
+
 		t.Run("when the brightness file is user-writable", func(t *testing.T) {
 			t.Run("is true", func(t *testing.T) {
 				filePermissionCheck = func(_ string) (int, int, fs.FileMode) {
@@ -238,6 +254,21 @@ func TestCanWriteBrightness(t *testing.T) {
 
 				actual := canWriteBrightness()
 				expected := true
+
+				if expected != actual {
+					t.Fatalf("expected %v; got: %v", expected, actual)
+				}
+			})
+		})
+
+		t.Run("when the brightness file is group-readable", func(t *testing.T) {
+			t.Run("is true", func(t *testing.T) {
+				filePermissionCheck = func(_ string) (int, int, fs.FileMode) {
+					return rootUserId, testGroupId, fs.FileMode(uint32(0640))
+				}
+
+				actual := canWriteBrightness()
+				expected := false
 
 				if expected != actual {
 					t.Fatalf("expected %v; got: %v", expected, actual)
