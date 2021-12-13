@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"io/fs"
 	"os"
@@ -21,20 +22,27 @@ var filePermissionCheck = nativeFilePermissionCheck
 var fileWriter = nativeFileWriter
 
 func main() {
-	setBrightness()
+	if err := orchestrationError(); err != nil {
+		fmt.Println("Unable to set brightness:", err)
+		return
+	}
+
+	toggleBrightness()
 }
 
-func setBrightness() bool {
+func orchestrationError() error {
 	if !isBrightnessValid() {
-		fmt.Println("System does not report a current brightness level.")
-		return false
+		return errors.New("system does not report a current brightness level")
 	}
 
 	if !canWriteBrightness() {
-		fmt.Println("Cannot update the brightness level; you may need to run with elevated privileges.")
-		return false
+		return errors.New("user account does not have permissions to update the brightness level; you may need to run with elevated privileges")
 	}
 
+	return nil
+}
+
+func toggleBrightness() bool {
 	if isHighBrightness() {
 		return setLowBrightness() > 0
 	} else {
