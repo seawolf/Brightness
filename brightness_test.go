@@ -157,6 +157,147 @@ func TestCurrentBrightness(t *testing.T) {
 	})
 }
 
+func TestNewBrightness(t *testing.T) {
+	t.Run(`when given "up"`, func(t *testing.T) {
+		fileReader = func(_ string) string {
+			return "123\n"
+		}
+
+		t.Run("returns one step up from the current brightness", func(t *testing.T) {
+			expected := 123 + 50
+			actual := newBrightness("up")
+
+			if expected != actual {
+				t.Fatalf("expected: %v but got %v", expected, actual)
+			}
+		})
+	})
+
+	t.Run(`when given "down"`, func(t *testing.T) {
+		fileReader = func(_ string) string {
+			return "123\n"
+		}
+
+		t.Run("returns one step down from the current brightness", func(t *testing.T) {
+			expected := 123 - 50
+			actual := newBrightness("down")
+
+			if expected != actual {
+				t.Fatalf("expected: %v but got %v", expected, actual)
+			}
+		})
+	})
+
+	t.Run("returns -1", func(t *testing.T) {
+		expected := -1
+		actual := newBrightness("hello")
+
+		if expected != actual {
+			t.Fatalf("expected: %v but got %v", expected, actual)
+		}
+	})
+}
+
+func TestNewBrightnessError(t *testing.T) {
+	t.Run("when given a specific number", func(t *testing.T) {
+		t.Run("returns an error", func(t *testing.T) {
+			expected := "given a number but expected a direction (up, down)"
+			actual := newBrightnessError(HIGH_BRIGHTNESS-1, "123").Error()
+
+			if actual != expected {
+				t.Fatalf("expected: %v but got %v", expected, actual)
+			}
+		})
+	})
+
+	t.Run("when the given level is bigger than the max", func(t *testing.T) {
+		t.Run("returns an error", func(t *testing.T) {
+			expected := "too big"
+			actual := newBrightnessError(HIGH_BRIGHTNESS+1, "<N/A>").Error()
+
+			if actual != expected {
+				t.Fatalf("expected: %v but got %v", expected, actual)
+			}
+		})
+	})
+
+	t.Run("when the given level is at the max", func(t *testing.T) {
+		t.Run("returns no error", func(t *testing.T) {
+			actual := newBrightnessError(HIGH_BRIGHTNESS+0, "<N/A>")
+
+			if actual != nil {
+				t.Fatalf("expected: %v but got %v", nil, actual)
+			}
+		})
+	})
+
+	t.Run("when the given level is just below the max", func(t *testing.T) {
+		t.Run("returns no error", func(t *testing.T) {
+			actual := newBrightnessError(HIGH_BRIGHTNESS-1, "<N/A>")
+
+			if actual != nil {
+				t.Fatalf("expected: %v but got %v", nil, actual)
+			}
+		})
+	})
+
+	t.Run("when the given level is just above the min", func(t *testing.T) {
+		t.Run("returns no error", func(t *testing.T) {
+			actual := newBrightnessError(LOW_BRIGHTNESS+1, "<N/A>")
+
+			if actual != nil {
+				t.Fatalf("expected: %v but got %v", nil, actual)
+			}
+		})
+	})
+
+	t.Run("when the given level is at the min", func(t *testing.T) {
+		t.Run("returns no error", func(t *testing.T) {
+			actual := newBrightnessError(LOW_BRIGHTNESS+0, "<N/A>")
+
+			if actual != nil {
+				t.Fatalf("expected: %v but got %v", nil, actual)
+			}
+		})
+	})
+
+	t.Run("when the given level is below the min", func(t *testing.T) {
+		t.Run("returns an error", func(t *testing.T) {
+			expected := "too small"
+			actual := newBrightnessError(MINIMUM_BRIGHTNESS-1, "<N/A>").Error()
+
+			if actual != expected {
+				t.Fatalf("expected: %v but got %v", expected, actual)
+			}
+		})
+	})
+}
+
+func TestSetBrightness(t *testing.T) {
+	t.Run("setBrightness", func(t *testing.T) {
+		t.Run("tells the system to set the brightness to the given level", func(t *testing.T) {
+			var fileWritten string
+			var contentWritten string
+
+			fileWriter = func(filename, str string) error {
+				fileWritten = filename
+				contentWritten = str
+
+				return nil
+			}
+
+			setBrightness(1234567890)
+
+			if fileWritten != "/sys/class/backlight/gmux_backlight/brightness" {
+				t.Fatalf("did not write to expected file; wrote to: %s", fileWritten)
+			}
+			if contentWritten != "1234567890" {
+				t.Fatalf("did not write expected content; wrote: %s", contentWritten)
+			}
+		})
+	})
+}
+
 func TestSetLowBrightness(t *testing.T) {
 	t.Run("setLowBrightness", func(t *testing.T) {
 		t.Run("tells the system to set the brightness to low", func(t *testing.T) {

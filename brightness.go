@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/fs"
 	"os"
+	"regexp"
 	"strconv"
 	"strings"
 	"syscall"
@@ -27,7 +28,19 @@ func main() {
 		return
 	}
 
-	toggleBrightness()
+	if len(os.Args) == 1 { // given just the program name
+		toggleBrightness()
+		return
+	}
+
+	direction := os.Args[1]
+	newBrightness := newBrightness(direction)
+	if newBrightnessError := newBrightnessError(newBrightness, direction); newBrightnessError != nil {
+		fmt.Println("Unable to set brightness:", newBrightnessError)
+		return
+	}
+
+	setBrightness(newBrightness)
 }
 
 func orchestrationError() error {
@@ -74,6 +87,34 @@ func currentBrightness() int {
 	return currentBrightness
 }
 
+func newBrightness(direction string) int {
+	if direction == "up" {
+		return currentBrightness() + 50
+	}
+
+	if direction == "down" {
+		return currentBrightness() - 50
+	}
+
+	return -1
+}
+
+func newBrightnessError(newBrightness int, rawNewBrightness string) error {
+	if matched, _ := regexp.MatchString(`^[0-9]+$`, rawNewBrightness); matched {
+		return errors.New("given a number but expected a direction (up, down)")
+	}
+
+	if newBrightness > HIGH_BRIGHTNESS {
+		return errors.New("too big")
+	}
+
+	if newBrightness < LOW_BRIGHTNESS {
+		return errors.New("too small")
+	}
+
+	return nil
+}
+
 func canWriteBrightness() bool {
 	return fileWriteBit() == "w"
 }
@@ -101,6 +142,13 @@ func fileWriteBitString(uid, gid, fileUid, fileGid int, userWritePerm, groupWrit
 		fmt.Printf("Write permission is: World %v\n", worldWritePerm)
 		return worldWritePerm
 	}
+}
+
+func setBrightness(newBrightness int) int {
+	fmt.Printf("·  Setting brightness: %d ...\n", newBrightness)
+	fileWriter(BRIGHTNESS_FILE, strconv.Itoa(newBrightness))
+
+	return newBrightness
 }
 
 func setLowBrightness() int {

@@ -1,8 +1,8 @@
-.DEFAULT_GOAL := run
+.DEFAULT_GOAL := toggle
 
-.PHONY: test test_coverage run clean
+.PHONY: test test_coverage toggle up down clean
 
-all: test run
+all: test toggle
 
 test:
 	@ go test -coverprofile=cover.out .
@@ -13,8 +13,14 @@ test_coverage: test
 brightness:
 	@ go build -o ./brightness brightness.go
 
-run: brightness
+toggle: brightness
 	@ ./brightness
+
+up: brightness
+	@ ./brightness up
+
+down: brightness
+	@ ./brightness down
 
 clean:
 	@ test -f ./brightness && rm ./brightness || true
