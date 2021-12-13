@@ -1,8 +1,14 @@
 package main
 
 import (
+	"io/fs"
 	"testing"
 )
+
+const testUserId = 500
+const testGroupId = 500
+const rootUserId = 0
+const rootGroupId = 0
 
 func TestIsBrightnessValid(t *testing.T) {
 	t.Run("isBrightnessValid", func(t *testing.T) {
@@ -15,7 +21,7 @@ func TestIsBrightnessValid(t *testing.T) {
 				actual := isBrightnessValid()
 				expected := true
 
-				if(expected != actual) {
+				if expected != actual {
 					t.Fatalf("expected: %v · got: %v", expected, actual)
 				}
 			})
@@ -30,7 +36,7 @@ func TestIsBrightnessValid(t *testing.T) {
 				actual := isBrightnessValid()
 				expected := true
 
-				if(expected != actual) {
+				if expected != actual {
 					t.Fatalf("expected: %v · got: %v", expected, actual)
 				}
 			})
@@ -45,7 +51,7 @@ func TestIsBrightnessValid(t *testing.T) {
 				actual := isBrightnessValid()
 				expected := false
 
-				if(expected != actual) {
+				if expected != actual {
 					t.Fatalf("expected: %v · got: %v", expected, actual)
 				}
 			})
@@ -60,7 +66,7 @@ func TestIsBrightnessValid(t *testing.T) {
 				actual := isBrightnessValid()
 				expected := false
 
-				if(expected != actual) {
+				if expected != actual {
 					t.Fatalf("expected: %v · got: %v", expected, actual)
 				}
 			})
@@ -79,7 +85,7 @@ func TestIsHighBrightness(t *testing.T) {
 				actual := isHighBrightness()
 				expected := true
 
-				if(expected != actual) {
+				if expected != actual {
 					t.Fatalf("expected: %v · got: %v", expected, actual)
 				}
 			})
@@ -94,7 +100,7 @@ func TestIsHighBrightness(t *testing.T) {
 				actual := isHighBrightness()
 				expected := false
 
-				if(expected != actual) {
+				if expected != actual {
 					t.Fatalf("expected: %v · got: %v", expected, actual)
 				}
 			})
@@ -109,7 +115,7 @@ func TestIsHighBrightness(t *testing.T) {
 				actual := isHighBrightness()
 				expected := false
 
-				if(expected != actual) {
+				if expected != actual {
 					t.Fatalf("expected: %v · got: %v", expected, actual)
 				}
 			})
@@ -128,7 +134,7 @@ func TestCurrentBrightness(t *testing.T) {
 				actual := currentBrightness()
 				expected := 123
 
-				if(expected != actual) {
+				if expected != actual {
 					t.Fatalf("expected: %v · got: %v", expected, actual)
 				}
 			})
@@ -143,7 +149,7 @@ func TestCurrentBrightness(t *testing.T) {
 				actual := currentBrightness()
 				expected := -1
 
-				if(expected != actual) {
+				if expected != actual {
 					t.Fatalf("expected: %v · got: %v", expected, actual)
 				}
 			})
@@ -166,10 +172,10 @@ func TestSetLowBrightness(t *testing.T) {
 
 			setLowBrightness()
 
-			if(fileWritten != "/sys/class/backlight/gmux_backlight/brightness") {
+			if fileWritten != "/sys/class/backlight/gmux_backlight/brightness" {
 				t.Fatalf("did not write to expected file; wrote to: %s", fileWritten)
 			}
-			if(contentWritten != "250") {
+			if contentWritten != "250" {
 				t.Fatalf("did not write expected content; wrote: %s", contentWritten)
 			}
 		})
@@ -191,12 +197,82 @@ func TestSetHighBrightness(t *testing.T) {
 
 			setHighBrightness()
 
-			if(fileWritten != "/sys/class/backlight/gmux_backlight/brightness") {
+			if fileWritten != "/sys/class/backlight/gmux_backlight/brightness" {
 				t.Fatalf("did not write to expected file; wrote to: %s", fileWritten)
 			}
-			if(contentWritten != "750") {
+			if contentWritten != "750" {
 				t.Fatalf("did not write expected content; wrote: %s", contentWritten)
 			}
+		})
+	})
+}
+
+func TestCanWriteBrightness(t *testing.T) {
+	t.Run("canWriteBrightness", func(t *testing.T) {
+		userId = func() int {
+			return testUserId
+		}
+		groupId = func() int {
+			return testGroupId
+		}
+
+		t.Run("when the brightness file is user-writable and a bit more", func(t *testing.T) {
+			t.Run("is true", func(t *testing.T) {
+				filePermissionCheck = func(_ string) (int, int, fs.FileMode) {
+					return testUserId, testGroupId, fs.FileMode(uint32(0700))
+				}
+
+				actual := canWriteBrightness()
+				expected := true
+
+				if expected != actual {
+					t.Fatalf("expected %v; got: %v", expected, actual)
+				}
+			})
+		})
+		t.Run("when the brightness file is user-writable", func(t *testing.T) {
+			t.Run("is true", func(t *testing.T) {
+				filePermissionCheck = func(_ string) (int, int, fs.FileMode) {
+					return testUserId, testGroupId, fs.FileMode(uint32(0600))
+				}
+
+				actual := canWriteBrightness()
+				expected := true
+
+				if expected != actual {
+					t.Fatalf("expected %v; got: %v", expected, actual)
+				}
+			})
+		})
+
+		t.Run("when the brightness file is user-readable", func(t *testing.T) {
+			t.Run("is true", func(t *testing.T) {
+				filePermissionCheck = func(_ string) (int, int, fs.FileMode) {
+					return testUserId, testGroupId, fs.FileMode(uint32(0400))
+				}
+
+				actual := canWriteBrightness()
+				expected := false
+
+				if expected != actual {
+					t.Fatalf("expected %v; got: %v", expected, actual)
+				}
+			})
+		})
+
+		t.Run("when the brightness file is user-inaccessible", func(t *testing.T) {
+			t.Run("is true", func(t *testing.T) {
+				filePermissionCheck = func(_ string) (int, int, fs.FileMode) {
+					return rootUserId, rootGroupId, fs.FileMode(uint32(0000))
+				}
+
+				actual := canWriteBrightness()
+				expected := false
+
+				if expected != actual {
+					t.Fatalf("expected %v; got: %v", expected, actual)
+				}
+			})
 		})
 	})
 }
