@@ -202,7 +202,7 @@ func TestNewBrightnessError(t *testing.T) {
 	t.Run("when given a specific number", func(t *testing.T) {
 		t.Run("returns an error", func(t *testing.T) {
 			expected := "given a number but expected a direction (up, down)"
-			actual := newBrightnessError(HIGH_BRIGHTNESS-1, "123").Error()
+			actual := newBrightnessError(HIGH_BRIGHTNESS, "123").Error()
 
 			if actual != expected {
 				t.Fatalf("expected: %v but got %v", expected, actual)
@@ -213,7 +213,7 @@ func TestNewBrightnessError(t *testing.T) {
 	t.Run("when the given level is bigger than the max", func(t *testing.T) {
 		t.Run("returns an error", func(t *testing.T) {
 			expected := "too big"
-			actual := newBrightnessError(HIGH_BRIGHTNESS+1, "<N/A>").Error()
+			actual := newBrightnessError(MAXIMUM_BRIGHTNESS+1, "<N/A>").Error()
 
 			if actual != expected {
 				t.Fatalf("expected: %v but got %v", expected, actual)
@@ -223,7 +223,7 @@ func TestNewBrightnessError(t *testing.T) {
 
 	t.Run("when the given level is at the max", func(t *testing.T) {
 		t.Run("returns no error", func(t *testing.T) {
-			actual := newBrightnessError(HIGH_BRIGHTNESS+0, "<N/A>")
+			actual := newBrightnessError(MAXIMUM_BRIGHTNESS+0, "<N/A>")
 
 			if actual != nil {
 				t.Fatalf("expected: %v but got %v", nil, actual)
@@ -233,7 +233,7 @@ func TestNewBrightnessError(t *testing.T) {
 
 	t.Run("when the given level is just below the max", func(t *testing.T) {
 		t.Run("returns no error", func(t *testing.T) {
-			actual := newBrightnessError(HIGH_BRIGHTNESS-1, "<N/A>")
+			actual := newBrightnessError(MAXIMUM_BRIGHTNESS-1, "<N/A>")
 
 			if actual != nil {
 				t.Fatalf("expected: %v but got %v", nil, actual)
@@ -243,7 +243,7 @@ func TestNewBrightnessError(t *testing.T) {
 
 	t.Run("when the given level is just above the min", func(t *testing.T) {
 		t.Run("returns no error", func(t *testing.T) {
-			actual := newBrightnessError(LOW_BRIGHTNESS+1, "<N/A>")
+			actual := newBrightnessError(MINIMUM_BRIGHTNESS+1, "<N/A>")
 
 			if actual != nil {
 				t.Fatalf("expected: %v but got %v", nil, actual)
@@ -253,7 +253,7 @@ func TestNewBrightnessError(t *testing.T) {
 
 	t.Run("when the given level is at the min", func(t *testing.T) {
 		t.Run("returns no error", func(t *testing.T) {
-			actual := newBrightnessError(LOW_BRIGHTNESS+0, "<N/A>")
+			actual := newBrightnessError(MINIMUM_BRIGHTNESS+0, "<N/A>")
 
 			if actual != nil {
 				t.Fatalf("expected: %v but got %v", nil, actual)

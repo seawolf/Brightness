@@ -11,6 +11,7 @@ import (
 	"syscall"
 )
 
+const MAXIMUM_BRIGHTNESS = 999
 const HIGH_BRIGHTNESS = 750
 const LOW_BRIGHTNESS = 250
 const MINIMUM_BRIGHTNESS = 1
@@ -104,11 +105,11 @@ func newBrightnessError(newBrightness int, rawNewBrightness string) error {
 		return errors.New("given a number but expected a direction (up, down)")
 	}
 
-	if newBrightness > HIGH_BRIGHTNESS {
+	if newBrightness > MAXIMUM_BRIGHTNESS {
 		return errors.New("too big")
 	}
 
-	if newBrightness < LOW_BRIGHTNESS {
+	if newBrightness < MINIMUM_BRIGHTNESS {
 		return errors.New("too small")
 	}
 
