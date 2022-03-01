@@ -1,3 +1,3 @@
 module bitbucket.org/sea_wolf/brightness
 
-go 1.12
+go 1.17
